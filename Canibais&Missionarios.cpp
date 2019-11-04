@@ -149,7 +149,7 @@ ostream& operator<<(ostream& o, Margens e) {
 void BackTracking(Node* n) {
 	if (n != NULL) {
 		BackTracking(n->pai);
-		cout << (*n->estado) << <<" "<<n->message <<endl;
+		cout << (*n->estado) <<" "<<n->message<<endl;
 	}
 }
 void BFS(Node* start) {
