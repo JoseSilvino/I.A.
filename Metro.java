@@ -19,16 +19,19 @@ public class Metro{
             this.estacao = estacao;
             filhos = new ArrayList<>();
             this.distanciapercorrida=0;
+            this.tempoGastoMin =0;
         }
         private Node(Node pai,int estacao,int distp){
             this(estacao);
             this.pai = pai;
-            this.distanciapercorrida = distp;
+            this.distanciapercorrida = distp + pai.distanciapercorrida;
+            double tempoGastoHr = distp/30d;
+            this.tempoGastoMin = pai.tempoGastoMin + 4 + 60*tempoGastoHr;
         }
         private void gerarFilhos(int[][] dists){
             for(int i=0;i<14;i++){
                 if(i!=estacao){
-                    filhos.add(new Node(this,i,this.distanciapercorrida + dists[i][estacao]));
+                    filhos.add(new Node(this,i, dists[i][estacao]));
                 }
             }
         }
@@ -64,8 +67,8 @@ public class Metro{
             Collections.sort(queue,new Comparator<Node>() {
                 @Override
                 public int compare(Node o1, Node o2) {
-                    if(o1.distanciapercorrida < o2.distanciapercorrida) return -1;
-                    else if(o1.distanciapercorrida > o2.distanciapercorrida) return 1;
+                    if(o1.tempoGastoMin < o2.tempoGastoMin) return -1;
+                    else if(o1.tempoGastoMin > o2.tempoGastoMin) return 1;
                     else return 0;
                 }
             });
