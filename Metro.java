@@ -1,6 +1,11 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Queue;
 import java.util.Scanner;
+
+import javax.swing.JOptionPane;
 
 public class Metro{
     private class Node{
@@ -8,6 +13,7 @@ public class Metro{
         ArrayList <Node> filhos;
         int estacao;
         int distanciapercorrida;
+        double tempoGastoMin;
         private Node(int estacao){
             pai = null;
             this.estacao = estacao;
@@ -19,36 +25,73 @@ public class Metro{
             this.pai = pai;
             this.distanciapercorrida = distp;
         }
-        private void gerarFilhos(){
+        private void gerarFilhos(int[][] dists){
             for(int i=0;i<14;i++){
                 if(i!=estacao){
-                    filhos.add(new Node(this,i));
+                    filhos.add(new Node(this,i,this.distanciapercorrida + dists[i][estacao]));
                 }
             }
         }
+        private void printway(){
+            if(pai!=null) pai.printway();
+            System.out.print((this.estacao+1));
+            if(filhos.size()>0) System.out.print(" , ");
+        }
+        @Override
+        public String toString() {
+            return Integer.toString(estacao+1);
+        }
     }
     int [][]distances;
-    Scanner input;
+    int or,de;
     private void BFS(Node start,int de){
+        ArrayList<Node> queue = new ArrayList<>();
+        queue.add(start);
+        while(!queue.isEmpty()){
+            Node dequeued = queue.get(0);
+            queue.remove(0);
+            //System.out.println("Distancia percorrida entre " + start + " e " +dequeued +" = " + dequeued.distanciapercorrida);
+            if(dequeued.estacao==de){
+                System.out.println(dequeued);
+                System.out.print('{');
+                dequeued.printway();
+                System.out.println('}');
+                System.out.println(dequeued.distanciapercorrida);
+                break;
+            }
+            dequeued.gerarFilhos(distances);
+            queue.addAll(dequeued.filhos);
+            Collections.sort(queue,new Comparator<Node>() {
+                @Override
+                public int compare(Node o1, Node o2) {
+                    if(o1.distanciapercorrida < o2.distanciapercorrida) return -1;
+                    else if(o1.distanciapercorrida > o2.distanciapercorrida) return 1;
+                    else return 0;
+                }
+            });
+        }
 
     }
     public int dist(int p1,int p2){
         return distances[p1][p2];
     }
-    Metro(int [][]distances){
+    Metro(int [][]distances,int or,int de){
         this.distances = distances;
-        this.input = new Scanner(System.in);
+        this.de = de;
+        this.or = or;
         Main();
     }
     private void Main(){
-        System.out.println("Diga as estações de origem e destino");
-        int or = input.nextInt();
-        int de = input.nextInt();
         Node n = new Node(or-1);
         BFS(n,de-1);
     }
     public static void main(String [] args){
-            trem t = new trem(new int[][]{
+        try{
+        System.out.println("Diga as estações de origem e destino");
+        Scanner input = new Scanner(System.in);
+        int or = Integer.parseInt(JOptionPane.showInputDialog(null,"Diga a estação de origem"));
+        int de = Integer.parseInt(JOptionPane.showInputDialog(null,"Diga a estação de destino"));
+            Metro t = new Metro(new int[][]{
                 {0,11,20,27,40,43,39,28,18,10,18,30,30,32},
                 {11,0,9,16,29,32,28,18,11,4,17,23,21,24},
                 {20,9,0,7,20,22,19,15,10,11,21,21,13,18},
@@ -62,7 +105,9 @@ public class Metro{
                 {18,17,21,26,38,41,38,18,12,20,0,15,35,39},
                 {30,23,21,21,27,30,28,7,12,27,15,0,31,37},
                 {30,21,13,11,16,17,13,25,23,20,35,31,0,5},
-                {32,24,18,17,20,20,17,30,28,23,39,37,5,0}});
-                System.out.println(t.dist(0, 5));
+                {32,24,18,17,20,20,17,30,28,23,39,37,5,0}},or,de);
+            }catch(Exception e) {
+                JOptionPane.showMessageDialog(null, e.getMessage());
+            }
      }
 }
