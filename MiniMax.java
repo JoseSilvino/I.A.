@@ -5,17 +5,16 @@
  */
 package minimax;
 import java.util.*;
-/**
- *
- * @author JOAO&
- */
+
+import javax.swing.JOptionPane;
+
 public class MiniMax {
-    private static class Node{
+    private  class Node{
         Node pai;
         ArrayList<Node> filhos;
         int depth;
         char[][] estado_matriz;
-        int x,y;
+        int l,c;
         Node(){
             pai = null;
             filhos = new ArrayList<>();
@@ -33,13 +32,13 @@ public class MiniMax {
         private long utilidade_min(){
             if(is_final()) return Utilidade();
             long v = Integer.MAX_VALUE;
-            for(var s :filhos) v = Long.min(v,s.utilidade_max());
+            for(Node s :filhos) v = Long.min(v,s.utilidade_max());
             return v;
         }
         private long utilidade_max(){
             if(is_final()) return Utilidade();
             long v = Integer.MIN_VALUE;
-            for(var s:filhos) v = Long.max(v, s.utilidade_min());
+            for(Node s:filhos) v = Long.max(v, s.utilidade_min());
             return v;
         }
         boolean is_final(){
@@ -54,8 +53,7 @@ public class MiniMax {
             if(estado_matriz[0][0]!='_'&&estado_matriz[0][0]==estado_matriz[1][1]&&estado_matriz[0][0]==estado_matriz[2][2]&&estado_matriz[1][1]==estado_matriz[2][2] )return true;
             return estado_matriz[0][2]!='_'&&estado_matriz[0][2]==estado_matriz[1][1]&&estado_matriz[0][2]==estado_matriz[2][0]&&estado_matriz[1][1]==estado_matriz[2][0];
         }
-        long Utilidade(){
-            if(is_final()){
+        long Utilidade_final(){
             for(int i=0;i<3;i++){
                 if(estado_matriz[i][0]=='O' && estado_matriz[i][1]=='O'&&estado_matriz[i][2] == 'O') return -1;
                 if(estado_matriz[0][i]=='O'&&estado_matriz[1][i]=='O'&&estado_matriz[2][i] == 'O') return -1;
@@ -69,6 +67,10 @@ public class MiniMax {
             if(estado_matriz[0][0]=='X' && estado_matriz[1][1]=='X'&& estado_matriz[2][2]=='X' )return 1;
             if(estado_matriz[0][2]=='X' &&estado_matriz[1][1]=='X'&&estado_matriz[2][0]=='X')return 1;
             return 0;
+        }
+        long Utilidade(){
+            if(is_final()){
+                return Utilidade_final();
             }
             //fazer algo parecido com o minimax
             return utilidade_max();
@@ -80,8 +82,8 @@ public class MiniMax {
                 for(int j=0;j<3;j++){
                     if(estado_matriz[i][j]=='_'){
                         Node s = new Node(this,Criar_Matriz(i,j,false));
-                        s.x =i;
-                        s.y =j;
+                        s.l =i;
+                        s.c =j;
                         filhos.add(s);
                         v = Long.min(v, s.VALUE_MAX());
                     }
@@ -108,8 +110,8 @@ public class MiniMax {
                 for(int j=0;j<3;j++){
                     if(estado_matriz[i][j]=='_'){
                         Node s = new Node(this,Criar_Matriz(i,j,true));
-                        s.x =i;
-                        s.y =j;
+                        s.l =i;
+                        s.c =j;
                         filhos.add(s);
                         v = Long.max(v, s.VALUE_MIN());
                     }
@@ -117,28 +119,27 @@ public class MiniMax {
             }
             return v;
         }
-        int MelhorPossib(){
-            return 1;
-        }
-        static Node MINIMAX(Node estado){
-            long v = estado.VALUE_MAX();
-            //ArrayList<Node> Solucoes = new ArrayList<>();
-            for(Node next:estado.filhos){
-                if(next.Utilidade()==v) return next;
+        long PiorPossib(){
+            if(is_final() && Utilidade_final()==-1) return Integer.MAX_VALUE;
+            if(is_final()&&Utilidade_final()==0) return Integer.MAX_VALUE-1;
+            long count=0;
+            for(Node next:filhos){
+                if(next.is_final()) count+=next.Utilidade_final();
+                else count+=next.MelhorPossib();
             }
-            return null;
-            /*
-            long l = Integer.MIN_VALUE;
-            Node melhor_filho=null;
-            for(Node n:Solucoes){
-                long mel = n.MelhorPossib();
-                if(l<mel){
-                    melhor_filho = n;
-                    l = n.MelhorPossib();
-                }
-            }
-            return melhor_filho;*/
+            return count;
         }
+        long MelhorPossib(){
+            if(is_final() && Utilidade_final()==1) return Integer.MAX_VALUE;
+            if(is_final()&&Utilidade_final()==0) return Integer.MAX_VALUE-1;
+            long count=0;
+            for(Node next:filhos){
+                if(next.is_final()) count+=next.Utilidade_final();
+                else count += next.PiorPossib();
+            }
+            return count;
+        }
+
 
         @Override
         public String toString() {
@@ -155,44 +156,115 @@ public class MiniMax {
     /**
      * @param args the command line arguments
      */
-    static boolean FIM_DE_JOGO(char[][] c){
-        var tmp = new Node(null, c);
+     boolean FIM_DE_JOGO(char[][] c){
+        Node tmp = new Node(null, c);
         return tmp.is_final();
     }
-    static void COPIAR(char[][]Matriz,Node n){
+     void COPIAR(char[][]Matriz,Node n){
         for(int i=0;i<3;i++) System.arraycopy(n.estado_matriz[i], 0, Matriz[i], 0, 3);
     }
+     Node MINIMAX(Node estado){
+        long v = estado.VALUE_MAX();
+        ArrayList<Node> Solucoes = new ArrayList<>();
+        for(Node next:estado.filhos){
+            if(next.Utilidade()==v) Solucoes.add(next);
+        }
+/*            for(Node next:estado.filhos){
+            if(next.Utilidade()==v) return next;
+        }
+        return null;*/
+
+        long l = Integer.MIN_VALUE;
+        Node melhor_filho=null;
+        for(Node n:Solucoes){
+            long mel = n.MelhorPossib();
+            if(l<mel){
+                melhor_filho = n;
+                l = mel;
+            }
+        }
+        return melhor_filho;
+    }
     public static void main(String[] args) {
+        boolean value = Integer.parseInt(JOptionPane.showInputDialog("Diga 0 se vc deseja jogar antes , e outro numero caso contário"))==0 ? true:false;
+        new MiniMax(value);
+    }
+    Scanner input;
+    MiniMax(boolean human){
+        input = new Scanner(System.in);
+        if(human)
+        Do_Game_Human_First();
+        else Do_Game_Machine_First();
+    }
+    void Do_Game_Machine_First(){
         Node n = new Node();
         System.out.println(n);
         System.out.println();
         char[][] MATRIZ = new char[3][3];
         COPIAR(MATRIZ, n);
-        int x,y;
-        Scanner input=new Scanner(System.in);
+        int l,c;
         while(!FIM_DE_JOGO(MATRIZ)){
             COPIAR(MATRIZ,n);
-            n = Node.MINIMAX(n);
+            n = MINIMAX(n);
             COPIAR(MATRIZ,n);
-            System.out.println(n);
-            if(!FIM_DE_JOGO(MATRIZ)){
-            System.out.println("DIGA AS COORDENADAS DE O");
-            while(true){
-                x = input.nextInt();
-                y = input.nextInt();
-                if(x>=0&&x<3&&y>=0&&y<3&&MATRIZ[x][y]=='_') break;
-                else System.out.println("LADRÂO");
-            }
-            MATRIZ[x][y]='O';
-            n = new Node(n,MATRIZ);
-            System.out.println();
-            System.out.println(n);
-            System.out.println('\n');
+            System.out.println(n);            
+            if(!FIM_DE_JOGO(MATRIZ)){        
+                System.out.println("DIGA AS COORDENADAS DE O");
+                while(true){
+                    l = input.nextInt();
+                    c = input.nextInt();
+                    // l = Integer.parseInt(JOptionPane.showInputDialog("DIGA A LINHA"));
+                    // c = Integer.parseInt(JOptionPane.showInputDialog("DIGA A COLUNA"));
+                    if(l>=0&&l<3&&c>=0&&c<3&&MATRIZ[l][c]=='_') break;
+                    else System.out.println("LADRÂO");
+                }
+                MATRIZ[l][c]='O';
+                n = new Node(n,MATRIZ);
+                System.out.println();
+                System.out.println(n);
+                System.out.println('\n');
             }
         }
         if(n.Utilidade()==0) System.out.println("EMPATE");
         else if(n.Utilidade()==-1) System.out.println("PARABENS , VOCE VENCEU");
         else if(n.Utilidade()==1) System.out.println("HAHA VOCE PERDEU PRA UM COMPUTADOR BURRO");
+        input.close();
+    }
+    void Do_Game_Human_First(){
+        Node n = new Node();
+        System.out.println(n);
+        System.out.println();
+        char[][] MATRIZ = new char[3][3];
+        COPIAR(MATRIZ, n);
+        int l,c;
+        while(!FIM_DE_JOGO(MATRIZ)){
+            System.out.println("DIGA AS COORDENADAS DE O");
+            while(true){
+                l = input.nextInt();
+                c = input.nextInt();
+                // l = Integer.parseInt(JOptionPane.showInputDialog("DIGA A LINHA"));
+                // c = Integer.parseInt(JOptionPane.showInputDialog("DIGA A COLUNA"));
+                if(l>=0&&l<3&&1>=0&&c<3&&MATRIZ[l][c]=='_') break;
+                else System.out.println("LADRÂO");
+            }
+            MATRIZ[l][c]='O';
+            n = new Node(n,MATRIZ);
+            System.out.println();
+            System.out.println(n);
+            System.out.println('\n');
+
+            
+            if(!FIM_DE_JOGO(MATRIZ)){
+                COPIAR(MATRIZ,n);
+                n = MINIMAX(n);
+                COPIAR(MATRIZ,n);
+                System.out.println(n);
+            }
+        }
+        if(n.Utilidade()==0) System.out.println("EMPATE");
+        else if(n.Utilidade()==-1) System.out.println("PARABENS , VOCE VENCEU");
+        else if(n.Utilidade()==1) System.out.println("HAHA VOCE PERDEU PRA UM COMPUTADOR BURRO");
+        input.close();
     }
     
 }
