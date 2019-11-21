@@ -15,6 +15,7 @@ public class MiniMax {
         int depth;
         char[][] estado_matriz;
         int l,c;
+        long util;
         Node(){
             pai = null;
             filhos = new ArrayList<>();
@@ -55,17 +56,17 @@ public class MiniMax {
         }
         long Utilidade_final(){
             for(int i=0;i<3;i++){
-                if(estado_matriz[i][0]=='O' && estado_matriz[i][1]=='O'&&estado_matriz[i][2] == 'O') return -1;
-                if(estado_matriz[0][i]=='O'&&estado_matriz[1][i]=='O'&&estado_matriz[2][i] == 'O') return -1;
+                if(estado_matriz[i][0]=='O' && estado_matriz[i][1]=='O'&&estado_matriz[i][2] == 'O') return -1-15+depth;
+                if(estado_matriz[0][i]=='O'&&estado_matriz[1][i]=='O'&&estado_matriz[2][i] == 'O') return -1-15+depth;
             }
-            if(estado_matriz[0][0]=='O' && estado_matriz[1][1]=='O'&& estado_matriz[2][2]=='O' )return -1;
-            if(estado_matriz[0][2]=='O' &&estado_matriz[1][1]=='O'&&estado_matriz[2][0]=='O')return -1;
+            if(estado_matriz[0][0]=='O' && estado_matriz[1][1]=='O'&& estado_matriz[2][2]=='O' )return -1-15+depth;
+            if(estado_matriz[0][2]=='O' &&estado_matriz[1][1]=='O'&&estado_matriz[2][0]=='O')return -1-15+depth;
             for(int i=0;i<3;i++){
-                if(estado_matriz[i][0]=='X' && estado_matriz[i][1]=='X'&&estado_matriz[i][2] == 'X') return 1;
-                if(estado_matriz[0][i]=='X'&&estado_matriz[1][i]=='X'&&estado_matriz[2][i] == 'X') return 1;
+                if(estado_matriz[i][0]=='X' && estado_matriz[i][1]=='X'&&estado_matriz[i][2] == 'X') return 1+15-depth;
+                if(estado_matriz[0][i]=='X'&&estado_matriz[1][i]=='X'&&estado_matriz[2][i] == 'X') return 1+15-depth;
             }
-            if(estado_matriz[0][0]=='X' && estado_matriz[1][1]=='X'&& estado_matriz[2][2]=='X' )return 1;
-            if(estado_matriz[0][2]=='X' &&estado_matriz[1][1]=='X'&&estado_matriz[2][0]=='X')return 1;
+            if(estado_matriz[0][0]=='X' && estado_matriz[1][1]=='X'&& estado_matriz[2][2]=='X' )return 1+15-depth;
+            if(estado_matriz[0][2]=='X' &&estado_matriz[1][1]=='X'&&estado_matriz[2][0]=='X')return 1+152-depth;
             return 0;
         }
         long Utilidade(){
@@ -74,22 +75,6 @@ public class MiniMax {
             }
             //fazer algo parecido com o minimax
             return utilidade_max();
-        }
-        long VALUE_MIN(){
-            if(this.is_final()) return this.Utilidade();
-            long v = Integer.MAX_VALUE;
-            for(int i=0;i<3;i++){
-                for(int j=0;j<3;j++){
-                    if(estado_matriz[i][j]=='_'){
-                        Node s = new Node(this,Criar_Matriz(i,j,false));
-                        s.l =i;
-                        s.c =j;
-                        filhos.add(s);
-                        v = Long.min(v, s.VALUE_MAX());
-                    }
-                }
-            }
-            return v;
         }
         char [][]Criar_Matriz(int l,int c,boolean is_X){
             char [][]m = new char[3][3];
@@ -103,9 +88,26 @@ public class MiniMax {
             }
             return m;
         }
-        long VALUE_MAX(){ 
-            if(this.is_final()) return this.Utilidade();
-            long v = Integer.MIN_VALUE;
+        long PiorPossib(){
+            if(is_final() ) return Utilidade_final();
+            long count=0;
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    if(estado_matriz[i][j]=='_'){
+                        Node s = new Node(this,Criar_Matriz(i,j,false));
+                        s.l =i;
+                        s.c =j;
+                        filhos.add(s);
+                        count+=s.MelhorPossib();
+                    }
+                }
+            }
+            util=count;
+            return count;
+        }
+        long MelhorPossib(){
+            if(is_final() ) return Utilidade_final();
+            long count=0;
             for(int i=0;i<3;i++){
                 for(int j=0;j<3;j++){
                     if(estado_matriz[i][j]=='_'){
@@ -113,30 +115,11 @@ public class MiniMax {
                         s.l =i;
                         s.c =j;
                         filhos.add(s);
-                        v = Long.max(v, s.VALUE_MIN());
+                        count+=s.PiorPossib();
                     }
                 }
             }
-            return v;
-        }
-        long PiorPossib(){
-            if(is_final() && Utilidade_final()==-1) return Integer.MAX_VALUE;
-            if(is_final()&&Utilidade_final()==0) return Integer.MAX_VALUE-1;
-            long count=0;
-            for(Node next:filhos){
-                if(next.is_final()) count+=next.Utilidade_final();
-                else count+=next.MelhorPossib();
-            }
-            return count;
-        }
-        long MelhorPossib(){
-            if(is_final() && Utilidade_final()==1) return Integer.MAX_VALUE;
-            if(is_final()&&Utilidade_final()==0) return Integer.MAX_VALUE-1;
-            long count=0;
-            for(Node next:filhos){
-                if(next.is_final()) count+=next.Utilidade_final();
-                else count += next.PiorPossib();
-            }
+            util  = count;
             return count;
         }
 
@@ -151,39 +134,43 @@ public class MiniMax {
             }
             return s;
         }
-        
+     
+    Node getMax(){
+        if(is_final()) return this;
+        long v = Integer.MIN_VALUE;
+        Node n = null;
+        for(Node next:filhos){
+            if(v<next.util){
+                v = next.Utilidade();
+                n = next;
+            }
+        }
+        return n;
+    }   
     }
     /**
      * @param args the command line arguments
      */
-     boolean FIM_DE_JOGO(char[][] c){
-        Node tmp = new Node(null, c);
-        return tmp.is_final();
+     boolean FIM_DE_JOGO(char[][] estado_matriz){
+        int count=0;
+        for(int i=0;i<3;i++)
+            for(int j=0;j<3;j++) if(estado_matriz[i][j]!='_') count++;
+        if(count==9) return true;
+        for(int i=0;i<3;i++){
+            if(estado_matriz[i][0]!='_'&&estado_matriz[i][0]==estado_matriz[i][1]&&estado_matriz[i][0]==estado_matriz[i][2]&&estado_matriz[i][1]==estado_matriz[i][2]) return true;
+            if(estado_matriz[0][i]!='_'&&estado_matriz[0][i]==estado_matriz[1][i]&&estado_matriz[0][i]==estado_matriz[2][i]&&estado_matriz[1][i]==estado_matriz[2][i]) return true;
+        }
+        if(estado_matriz[0][0]!='_'&&estado_matriz[0][0]==estado_matriz[1][1]&&estado_matriz[0][0]==estado_matriz[2][2]&&estado_matriz[1][1]==estado_matriz[2][2] )return true;
+        return estado_matriz[0][2]!='_'&&estado_matriz[0][2]==estado_matriz[1][1]&&estado_matriz[0][2]==estado_matriz[2][0]&&estado_matriz[1][1]==estado_matriz[2][0];
+    
     }
      void COPIAR(char[][]Matriz,Node n){
         for(int i=0;i<3;i++) System.arraycopy(n.estado_matriz[i], 0, Matriz[i], 0, 3);
     }
      Node MINIMAX(Node estado){
-        long v = estado.VALUE_MAX();
-        ArrayList<Node> Solucoes = new ArrayList<>();
-        for(Node next:estado.filhos){
-            if(next.Utilidade()==v) Solucoes.add(next);
-        }
-/*            for(Node next:estado.filhos){
-            if(next.Utilidade()==v) return next;
-        }
-        return null;*/
-
-        long l = Integer.MIN_VALUE;
-        Node melhor_filho=null;
-        for(Node n:Solucoes){
-            long mel = n.MelhorPossib();
-            if(l<mel){
-                melhor_filho = n;
-                l = mel;
-            }
-        }
-        return melhor_filho;
+         estado.MelhorPossib();
+         Node escolha = estado.getMax();
+         return escolha;
     }
     public static void main(String[] args) {
         boolean value = Integer.parseInt(JOptionPane.showInputDialog("Diga 0 se vc deseja jogar antes , e outro numero caso contário"))==0 ? true:false;
@@ -211,10 +198,10 @@ public class MiniMax {
             if(!FIM_DE_JOGO(MATRIZ)){        
                 System.out.println("DIGA AS COORDENADAS DE O");
                 while(true){
-                    l = input.nextInt();
-                    c = input.nextInt();
-                    // l = Integer.parseInt(JOptionPane.showInputDialog("DIGA A LINHA"));
-                    // c = Integer.parseInt(JOptionPane.showInputDialog("DIGA A COLUNA"));
+                    // l = input.nextInt();
+                    // c = input.nextInt();
+                    l = Integer.parseInt(JOptionPane.showInputDialog("DIGA A LINHA"));
+                    c = Integer.parseInt(JOptionPane.showInputDialog("DIGA A COLUNA"));
                     if(l>=0&&l<3&&c>=0&&c<3&&MATRIZ[l][c]=='_') break;
                     else System.out.println("LADRÂO");
                 }
@@ -226,8 +213,8 @@ public class MiniMax {
             }
         }
         if(n.Utilidade()==0) System.out.println("EMPATE");
-        else if(n.Utilidade()==-1) System.out.println("PARABENS , VOCE VENCEU");
-        else if(n.Utilidade()==1) System.out.println("HAHA VOCE PERDEU PRA UM COMPUTADOR BURRO");
+        else if(n.Utilidade()<0) System.out.println("PARABENS , VOCE VENCEU");
+        else if(n.Utilidade()>0) System.out.println("HAHA VOCE PERDEU PRA UM COMPUTADOR BURRO");
         input.close();
     }
     void Do_Game_Human_First(){
@@ -240,10 +227,10 @@ public class MiniMax {
         while(!FIM_DE_JOGO(MATRIZ)){
             System.out.println("DIGA AS COORDENADAS DE O");
             while(true){
-                l = input.nextInt();
-                c = input.nextInt();
-                // l = Integer.parseInt(JOptionPane.showInputDialog("DIGA A LINHA"));
-                // c = Integer.parseInt(JOptionPane.showInputDialog("DIGA A COLUNA"));
+                // l = input.nextInt();
+                // c = input.nextInt();
+                l = Integer.parseInt(JOptionPane.showInputDialog("DIGA A LINHA"));
+                c = Integer.parseInt(JOptionPane.showInputDialog("DIGA A COLUNA"));
                 if(l>=0&&l<3&&1>=0&&c<3&&MATRIZ[l][c]=='_') break;
                 else System.out.println("LADRÂO");
             }
@@ -262,8 +249,8 @@ public class MiniMax {
             }
         }
         if(n.Utilidade()==0) System.out.println("EMPATE");
-        else if(n.Utilidade()==-1) System.out.println("PARABENS , VOCE VENCEU");
-        else if(n.Utilidade()==1) System.out.println("HAHA VOCE PERDEU PRA UM COMPUTADOR BURRO");
+        else if(n.Utilidade()<0) System.out.println("PARABENS , VOCE VENCEU");
+        else if(n.Utilidade()>0) System.out.println("HAHA VOCE PERDEU PRA UM COMPUTADOR BURRO");
         input.close();
     }
     
