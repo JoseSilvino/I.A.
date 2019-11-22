@@ -56,17 +56,17 @@ public class MiniMax {
         }
         long Utilidade_final(){
             for(int i=0;i<3;i++){
-                if(estado_matriz[i][0]=='O' && estado_matriz[i][1]=='O'&&estado_matriz[i][2] == 'O') return -1-15+depth;
-                if(estado_matriz[0][i]=='O'&&estado_matriz[1][i]=='O'&&estado_matriz[2][i] == 'O') return -1-15+depth;
+                if(estado_matriz[i][0]=='O' && estado_matriz[i][1]=='O'&&estado_matriz[i][2] == 'O') return -20+depth;
+                if(estado_matriz[0][i]=='O'&&estado_matriz[1][i]=='O'&&estado_matriz[2][i] == 'O') return -20+depth;
             }
-            if(estado_matriz[0][0]=='O' && estado_matriz[1][1]=='O'&& estado_matriz[2][2]=='O' )return -1-15+depth;
-            if(estado_matriz[0][2]=='O' &&estado_matriz[1][1]=='O'&&estado_matriz[2][0]=='O')return -1-15+depth;
+            if(estado_matriz[0][0]=='O' && estado_matriz[1][1]=='O'&& estado_matriz[2][2]=='O' )return -20+depth;
+            if(estado_matriz[0][2]=='O' &&estado_matriz[1][1]=='O'&&estado_matriz[2][0]=='O')return -20+depth;
             for(int i=0;i<3;i++){
-                if(estado_matriz[i][0]=='X' && estado_matriz[i][1]=='X'&&estado_matriz[i][2] == 'X') return 1+15-depth;
-                if(estado_matriz[0][i]=='X'&&estado_matriz[1][i]=='X'&&estado_matriz[2][i] == 'X') return 1+15-depth;
+                if(estado_matriz[i][0]=='X' && estado_matriz[i][1]=='X'&&estado_matriz[i][2] == 'X') return 20-depth;
+                if(estado_matriz[0][i]=='X'&&estado_matriz[1][i]=='X'&&estado_matriz[2][i] == 'X') return 20-depth;
             }
-            if(estado_matriz[0][0]=='X' && estado_matriz[1][1]=='X'&& estado_matriz[2][2]=='X' )return 1+15-depth;
-            if(estado_matriz[0][2]=='X' &&estado_matriz[1][1]=='X'&&estado_matriz[2][0]=='X')return 1+152-depth;
+            if(estado_matriz[0][0]=='X' && estado_matriz[1][1]=='X'&& estado_matriz[2][2]=='X' )return 20-depth;
+            if(estado_matriz[0][2]=='X' &&estado_matriz[1][1]=='X'&&estado_matriz[2][0]=='X')return 20-depth;
             return 0;
         }
         long Utilidade(){
