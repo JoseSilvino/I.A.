@@ -90,37 +90,33 @@ public class MiniMax {
         }
         long PiorPossib(){
             if(is_final() ) return Utilidade_final();
-            long count=0;
+            long v = Integer.MAX_VALUE;
             for(int i=0;i<3;i++){
                 for(int j=0;j<3;j++){
                     if(estado_matriz[i][j]=='_'){
                         Node s = new Node(this,Criar_Matriz(i,j,false));
-                        s.l =i;
-                        s.c =j;
                         filhos.add(s);
-                        count+=s.MelhorPossib();
+                        v = Long.max(v,s.MelhorPossib());    
                     }
                 }
             }
-            util=count;
-            return count;
+            util=v;
+            return v;
         }
         long MelhorPossib(){
             if(is_final() ) return Utilidade_final();
-            long count=0;
+            long v=Integer.MIN_VALUE;
             for(int i=0;i<3;i++){
                 for(int j=0;j<3;j++){
                     if(estado_matriz[i][j]=='_'){
                         Node s = new Node(this,Criar_Matriz(i,j,true));
-                        s.l =i;
-                        s.c =j;
                         filhos.add(s);
-                        count+=s.PiorPossib();
+                        v = Long.min(v,s.PiorPossib());
                     }
                 }
             }
-            util  = count;
-            return count;
+            util  = v;
+            return v;
         }
 
 
