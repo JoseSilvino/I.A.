@@ -120,7 +120,8 @@ int main() {
 	{ 80, 40, 48, -1, 80 ,35, 57, -1, -1,0 } };
 	int comeco;
 	cin >> comeco;
-	cout<<"Demora alguns minutos , por favor tenha paciencia\n";
+        comeco--;
+	cout<<"Pode demorar alguns minutos , por favor tenha paciencia\n";
 	cout<<"Cidade inicial "<<comeco<<endl;
 	int a[11] = { 0 };
 	a[0] = comeco;
