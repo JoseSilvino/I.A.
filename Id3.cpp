@@ -112,25 +112,36 @@ string predominant_class(vector<int> regs){
     pair<vector<string>,int> x = get_classes(regs);
     return x.first[x.second];
 }
-double errortx(string pc,vector<int>regs){
+double errorrt(string pc,vector<int>regs){
     double err =0.0;
     for(int i:regs){
         if(base[i][base[i].size()-1]!=pc) err++;
     }
     return err/(double)regs.size();
 }
+vector<string> removefrom(vector<string> v,string s){
+        vector<string> n_v;
+        for(auto str:v) if(str!=s) n_v.push_back(str);
+        return n_v;
+    }
+vector<int> remove_not_equals(vector<int> v,int index,string value){
+        vector<int> n_v;
+        for(auto i:v) if(base[i][index]==value) n_v.push_back(i);
+        return n_v;
+    }
 class Node{
     public:
     vector<Node*> children;
     string classification;
     string attribute,value;
-    double error_tx;
+    double error_rt;
     Node(){
        this->children.resize(0);
+       this->attribute = "First Node";
     }
-    Node(string classification,double error_tx){
+    Node(string classification,double error_rt){
         this->classification = classification;
-        this->error_tx = error_tx;
+        this->error_rt = error_rt;
         this->attribute="";
         this->value="";
     }
@@ -138,18 +149,9 @@ class Node{
         this->value = value;
         this->attribute = attribute;
         this->classification = "";
-        this->error_tx=0.0;
+        this->error_rt=0.0;
     }
-    vector<string> removefrom(vector<string> v,string s){
-        vector<string> n_v;
-        for(auto str:v) if(str!=s) n_v.push_back(str);
-        return n_v;
-    }
-    vector<int> remove_not_equals(vector<int> v,int index,string value){
-        vector<int> n_v;
-        for(auto i:v) if(base[i][index]==value) n_v.push_back(i);
-        return n_v;
-    }
+
     void generate_node(vector<int> registers,vector<string> attributes){
         vector<string> classes = get_classes(registers).first;
         if(classes.size()>1){
@@ -169,13 +171,13 @@ class Node{
                 }
             }else{
                 string pc = predominant_class(registers);
-                double tx = errortx(pc,registers);
+                double rt = errorrt(pc,registers);
                 this->classification = pc;
-                this->error_tx = tx;
+                this->error_rt = rt;
             }
         }else{
             this->classification=classes[0];
-            this->error_tx=0.0;
+            this->error_rt=0.0;
         }
     }
     bool isLeaf(){
@@ -184,48 +186,134 @@ class Node{
 };
 void print_pre(Node* n){
     if(n!=NULL){
-        cout<<"Attribute :"<<n->attribute<<"| Value :"<<n->value<<" |Error :"<<n->error_tx<<" |Class :"<<n->classification<<endl;
+        cout<<"Attribute : "<<n->attribute<<"| Value : "<<n->value<<" |Error : "<<n->error_rt<<" |Class : "<<n->classification<<endl;
         for(auto c:n->children) print_pre(c);
     }
 }
-void classificar(Node* n,vector<string> to_classify){
-    if(n->isLeaf()) cout<<"Comprou? "<<n->classification<<endl;
+void Go_Classify(Node* n,vector<string> to_classify,string& ret){
+    if(n->isLeaf()) {
+        cout<<"Classificated as "<<n->classification<<" in "<<or_atts[or_atts.size()-1]<<endl;
+        ret = n->classification;
+        }
     else{
         for(auto child:n->children){
             if(to_classify[indexof(or_atts,child->attribute)]==child->value){
-                classificar(child,to_classify);
+                Go_Classify(child,to_classify,ret);
                 break;
             }
         }
     }
 }
-int main(){
-    //substituir por receber a base de dados
-    or_atts.push_back("male?");
-    //or_atts.push_back("buys?");
-    vector<string> v(2,"yes");
-    vector<string> v1(2,"no");
-    vector<string> v2;
-    v2.push_back("no");
-    v2.push_back("yes");
-    base.push_back(v);
-    base.push_back(v1);
-    base.push_back(v2);
+Node* createTree(){
+    int vec_vec_size,vec_size;
+    cout<<"Tell how many data the base has\n";
+    cin>>vec_vec_size;
+    cout<<"Tell how many attributes the base has\n";
+    cin>>vec_size;
+    base = vector<vector <string> >(vec_vec_size,vector<string>(vec_size,""));
+    cout<<"Write base attributes\n";
+    or_atts.resize(vec_size);
+    for(int i=0;i<vec_size;i++) cin>>or_atts[i];
+    cout<<"Write users' atributes in the same order as before\n";
+    for(int i =0;i<vec_vec_size;i++) for(int j=0;j<vec_size;j++) {cin>>base[i][j];cout<<i<<" "<<j<<endl;}
     Node* n = new Node();
     vector<int> vi;
     for(int i=0;i<(int)base.size();i++) vi.push_back(i);
-    n->generate_node(vi,or_atts);
-    //fim do treinamento
+    auto n_or_atts = removefrom(or_atts,or_atts[vec_size-1]);
+    n->generate_node(vi,n_or_atts);
+    cout<<"Pre order print of the decision tree\n";
     print_pre(n);
-    //comeca a parte de classificar
-    vector<string> classify(or_atts.size(),"");
-    cout<<"diga se é homem"<<endl;
-    for(int i=0;i<(int)or_atts.size();i++){
-        cin>>classify[i];
+    return n;
+}
+Node* re_mount_tree(){
+    Node* n = new Node();
+    vector<int> vi;
+    for(int i=0;i<(int)base.size();i++) vi.push_back(i);
+    auto n_or_atts = removefrom(or_atts,or_atts[or_atts.size()-1]);
+    n->generate_node(vi,n_or_atts);
+    cout<<"Pre order print of the decision tree\n";
+    print_pre(n);
+    return n;
+}
+vector< vector<int> > Generate_Confusion_Matrix(Node* n){
+    vector<string> sc = system_classes();
+    int scsize = sc.size();
+    vector<vector <int> > matrix(scsize,vector<int>(scsize,0));
+    for(int i=0;i<scsize;i++){
+        for(int j=0;j<(int)base.size();j++){
+            string real = base[j][or_atts.size()-1];
+            string in_tree;
+            auto tmp = removefrom(base[j],base[j][or_atts.size()-1]);
+            Go_Classify(n,tmp,in_tree);
+            int ind1,ind2;
+            ind1 = indexof(sc,real);
+            ind2 = indexof(sc,in_tree);
+            matrix[ind1][ind2]++;
+        }
     }
-    classificar(n,classify);
-    string s;
-    cin>>s;
-    classify.push_back(s);
+    return matrix;
+}
+double recall(vector <vector <int> >matrix,int i){
+    int size = matrix.size();
+    double rec = 0.0;
+    for(int j =0;j<size;j++) rec+=matrix[i][j];
+    return (double)((double)matrix[i][i]/rec);
+}
+double precision(vector <vector <int> >matrix,int j){
+    int size = matrix.size();
+    double rec = 0.0;
+    for(int i=0;i<size;i++) rec+=matrix[i][j];
+    return (double)((double)matrix[j][j]/rec);
+}
+double accuracy(vector<vector <int> >m){
+    int size=m.size();
+    double diagonal = 0.0,total = 0.0;
+    for(int i=0;i<size;i++) diagonal+=m[i][i];
+    for(int i=0;i<size;i++) for(int j=0;j<size;j++) total+=m[i][j];
+    return diagonal/total;
+}
+int main(){
+    Node* n;
+    //substituir por receber a base de dados
+    while(1){
+        cout<<"Choose\n1. Training\n2. Evaluation\nOther. Exit\n";
+        int d;
+        cin>>d;
+        if(d==1){
+            int de;
+            cout<<"Choose\n1. Change the base\n2. Use the updated base\n";
+            cin>>de;
+            if(de==1)
+            n = createTree();
+            else if(de==2) n = re_mount_tree();
+        }else if(d==2){
+            cout<<"Write users' attributes in the right order\n";
+            vector<string> classify(or_atts.size(),"");
+            int i;
+            for(i =0;i<(int)(or_atts.size()-1);i++)cin>>classify[i];
+            string last;
+            cin>>last;
+            string classificated;
+            Go_Classify(n,classify,classificated);
+            classify.push_back(last);
+            if(last!=classificated)cout<<"The Value of"<<or_atts[or_atts.size()-1]<<" is different from the tree's result\n";
+            else cout<<"The value of"<<or_atts[or_atts.size()-1]<<" is equal from the tree's result\n";
+            base.push_back(classify);
+        }else break;
+        auto matrix = Generate_Confusion_Matrix(n);
+            cout<<"Confusion matrix\n";
+            for(auto x:matrix) {
+                for (auto y:x) cout<<y<<" ";
+                cout<<endl;
+            }
+        double accuracy = accuracy(m);
+        cout<<"Accuracy : "<<accuracy<<endl;
+        cout<<"Error Rate : "<<1-accuracy<<endl;
+        auto sc = system_classes();
+        for(int i =0;i<matrix.size();i++){
+            cout<<"Recall ("<<sc[i]<<") : "<<recall(matrix,i)<<endl;
+            cout<<"Precision ("<<sc[i]<<") : "<<precision(matrix,i)<<endl;
+        }
+    }
     return 0;
 }
