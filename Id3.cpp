@@ -2,6 +2,11 @@
 using namespace std;
 vector < vector < string > > base;
 vector < string >  or_atts;
+ostream& operator<<(ostream& o,vector<string> v){
+    for(auto x:v)
+        o<<x<<" ";
+    return o;
+}
 template <typename t>
 bool contains(vector<t> vet,t c){
     for(t x : vet) if(x==c) return true;
@@ -31,7 +36,7 @@ double entropy_system(){
     vector<string> sc = system_classes();
     double result=0;
     for(int i = 0 ; i < (int)sc.size();i++){
-        double divi = (double)occurrences(sc[i],base.size()-1)/(double)base.size();
+        double divi = (double)occurrences(sc[i],(base[0].size())-1)/(double)base.size();
         result += (divi)*log2(divi);
     }
     return -result;
@@ -50,15 +55,20 @@ double entropy(string att,vector<int> regs){
     vector <vector <int> > freqvalues(sc.size(),vector<int>(values.size(),0));
     for(int i : regs){
         for(int k = 0 ;k < (int)values.size();k++){
-            int ind = indexof(sc,base[i][base.size()-1]);
-            freqvalues[ind][k]++;
+            if(values[k]==base[i][j]){
+                int ind = indexof(sc,base[i][(base[i].size())-1]);
+                freqvalues[ind][k]++;
+            }
         }
     }
     double sum = 0.0;
     for(int k=0;k<(int)values.size();k++){
         double partialsum = 0.0;
         for(int i =0;i<(int)sc.size();i++){
-            partialsum-= ((double)((double)freqvalues[i][k]/(double)freq[k]))*log2((double)((double)freqvalues[i][k]/(double)freq[k]));
+            if(freqvalues[i][k]!=0){
+                double d = (double)((double)freqvalues[i][k]/(double)freq[k]);
+                partialsum-= (d)*log2(d);
+            }
         }
         sum+= (double)((double)freq[k]/(double)regs.size())*partialsum;
     }
@@ -103,9 +113,9 @@ string predominant_class(vector<int> regs){
     return x.first[x.second];
 }
 double errortx(string pc,vector<int>regs){
-    double err =0;
+    double err =0.0;
     for(int i:regs){
-        if(base[i][base.size()-1]!=pc) err++;
+        if(base[i][base[i].size()-1]!=pc) err++;
     }
     return err/(double)regs.size();
 }
@@ -154,7 +164,7 @@ class Node{
                     auto n = new Node(value,attribute);
                     children.push_back(n);
                     auto n_attributes = removefrom(attributes,attribute);
-                    auto n_regs = remove_from(regs,index,value);
+                    auto n_regs = remove_not_equals(registers,index,value);
                     n->generate_node(n_regs,n_attributes);
                 }
             }else{
@@ -168,7 +178,54 @@ class Node{
             this->error_tx=0.0;
         }
     }
+    bool isLeaf(){
+        return this->children.size()==0;
+    }
 };
+void print_pre(Node* n){
+    if(n!=NULL){
+        cout<<"Attribute :"<<n->attribute<<"| Value :"<<n->value<<" |Error :"<<n->error_tx<<" |Class :"<<n->classification<<endl;
+        for(auto c:n->children) print_pre(c);
+    }
+}
+void classificar(Node* n,vector<string> to_classify){
+    if(n->isLeaf()) cout<<"Comprou? "<<n->classification<<endl;
+    else{
+        for(auto child:n->children){
+            if(to_classify[indexof(or_atts,child->attribute)]==child->value){
+                classificar(child,to_classify);
+                break;
+            }
+        }
+    }
+}
 int main(){
+    //substituir por receber a base de dados
+    or_atts.push_back("male?");
+    //or_atts.push_back("buys?");
+    vector<string> v(2,"yes");
+    vector<string> v1(2,"no");
+    vector<string> v2;
+    v2.push_back("no");
+    v2.push_back("yes");
+    base.push_back(v);
+    base.push_back(v1);
+    base.push_back(v2);
+    Node* n = new Node();
+    vector<int> vi;
+    for(int i=0;i<(int)base.size();i++) vi.push_back(i);
+    n->generate_node(vi,or_atts);
+    //fim do treinamento
+    print_pre(n);
+    //comeca a parte de classificar
+    vector<string> classify(or_atts.size(),"");
+    cout<<"diga se é homem"<<endl;
+    for(int i=0;i<(int)or_atts.size();i++){
+        cin>>classify[i];
+    }
+    classificar(n,classify);
+    string s;
+    cin>>s;
+    classify.push_back(s);
     return 0;
 }
