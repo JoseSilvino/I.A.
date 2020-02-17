@@ -305,33 +305,22 @@ int main(){
             n = createTree(Trainbase);
         }else if(d==2){
             Evaluationbase = Complement(Trainbase,base);
-            cout<<"Write users' attributes in the right order\n";
-            vector<string> classify(or_atts.size(),"");
-            int i;
-            for(i =0;i<(int)(or_atts.size()-1);i++)cin>>classify[i];
-            string last;
-            cin>>last;
-            string classificated;
-            Go_Classify(n,classify,classificated);
-            classify.push_back(last);
-            if(last!=classificated)cout<<"The Value of"<<or_atts[or_atts.size()-1]<<" is different from the tree's result\n";
-            else cout<<"The value of"<<or_atts[or_atts.size()-1]<<" is equal from the tree's result\n";
-            base.push_back(classify);
-        }else break;
-        auto matrix = Generate_Confusion_Matrix(n,base);
+            auto matrix = Generate_Confusion_Matrix(n,Evaluationbase);
             cout<<"Confusion matrix\n";
             for(auto x:matrix) {
                 for (auto y:x) cout<<y<<" ";
                 cout<<endl;
             }
-        double acc = accuracy(matrix);
-        cout<<"Accuracy : "<<acc<<endl;
-        cout<<"Error Rate : "<<1-acc<<endl;
-        auto sc = system_classes(base);
-        for(int i =0;i<(int)matrix.size();i++){
-            cout<<"Recall ("<<sc[i]<<") : "<<recall(matrix,i)<<endl;
-            cout<<"Precision ("<<sc[i]<<") : "<<precision(matrix,i)<<endl;
-        }
+            double acc = accuracy(matrix);
+            cout<<"Accuracy : "<<acc<<endl;
+            cout<<"Error Rate : "<<1-acc<<endl;
+            auto sc = system_classes(base);
+            for(int i =0;i<(int)matrix.size();i++){
+                cout<<"Recall ("<<sc[i]<<") : "<<recall(matrix,i)<<endl;
+                cout<<"Precision ("<<sc[i]<<") : "<<precision(matrix,i)<<endl;
+            }
+        }else break;
+        
     }
     return 0;
 }
