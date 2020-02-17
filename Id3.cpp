@@ -203,22 +203,11 @@ void Go_Classify(Node* n,vector<string> to_classify,string& ret){
         }
     }
 }
-Node* createTree(vector < vector < string > > &base){
-    int vec_vec_size,vec_size;
-    cout<<"Tell how many data the base has\n";
-    cin>>vec_vec_size;
-    cout<<"Tell how many attributes the base has\n";
-    cin>>vec_size;
-    base = vector<vector <string> >(vec_vec_size,vector<string>(vec_size,""));
-    cout<<"Write base attributes\n";
-    or_atts.resize(vec_size);
-    for(int i=0;i<vec_size;i++) cin>>or_atts[i];
-    cout<<"Write users' atributes in the same order as before\n";
-    for(int i =0;i<vec_vec_size;i++) for(int j=0;j<vec_size;j++) {cin>>base[i][j];cout<<i<<" "<<j<<endl;}
+Node* createTree(vector < vector < string > > base){
     Node* n = new Node();
     vector<int> vi;
     for(int i=0;i<(int)base.size();i++) vi.push_back(i);
-    auto n_or_atts = removefrom(or_atts,or_atts[vec_size-1]);
+    auto n_or_atts = removefrom(or_atts,or_atts[or_atts.size()-1]);
     n->generate_node(vi,n_or_atts,base);
     cout<<"Pre order print of the decision tree\n";
     print_pre(n);
@@ -261,15 +250,58 @@ double accuracy(vector<vector <int> >m){
     for(int i=0;i<size;i++) for(int j=0;j<size;j++) total+=m[i][j];
     return diagonal/total;
 }
+vector< vector<string> > generate_db(){
+    cout<<"Tell the number of elements in the database\n";
+    int vec_vec_sz,vec_sz;
+    cin>>vec_vec_sz;
+    cout<<"Tell the number of attributes of the database\n";
+    cin>>vec_sz;
+    vector<vector<string> > base(vec_vec_sz,vector<string>(vec_sz,""));
+    cout<<"Tell the attributes' names\n";
+    or_atts.reserve(vec_sz);
+    for(int i=0;i<vec_sz;i++)cin>>or_atts[i];
+    cout<<"Tell the"<<vec_vec_sz<<" users and the "<<vec_sz<<"attributes of them in the same order\n";
+    for(int i=0;i<vec_vec_sz;i++)for(int j=0;j<vec_sz;j++) cin>>base[i][j];
+    return base;
+}
+vector < vector<string> > RandomPartition(vector < vector<string> >base){
+    srand(time(NULL));
+    size_t number_of = 0.8*base.size();
+    vector<int> sorted;
+    while(sorted.size()<number_of){
+        int n = rand()%base.size();
+        while(contains(sorted,n)) n = rand()%base.size();
+        sorted.push_back(n);
+    }
+    vector< vector<string> > ret;
+    for(auto x:sorted) ret.push_back(base[x]);
+    return ret;
+}
+bool equals(vector<string> v1,vector<string>v2){
+    if(v1.size()!=v2.size()) return false;
+    for(size_t i=0;i<v1.size();i++) if(v1[i]!=v2[i]) return false;
+    return true;
+}
+bool contains(vector< vector<string> > vvs,vector<string> vs){
+    for(auto x:vvs)  if(equals(x,vs)) return true;
+    return false;
+}
+vector < vector<string> > Complement(vector< vector<string> > or_base,vector< vector<string> > train_base){
+    vector< vector<string> >evaluationbase;
+    for(auto x:or_base) if(!contains(train_base,x)) evaluationbase.push_back(x);
+    return evaluationbase;
+}
 int main(){
     Node* n;
     //substituir por receber a base de dados
     vector < vector < string > > base,Evaluationbase,Trainbase;
+    base = generate_db();
     while(1){
         cout<<"Choose\n1. Training\n2. Evaluation\nOther. Exit\n";
         int d;
         cin>>d;
         if(d==1){
+            Trainbase = RandomPartition(base);
             n = createTree(Trainbase);
         }else if(d==2){
             Evaluationbase = Complement(Trainbase,base);
